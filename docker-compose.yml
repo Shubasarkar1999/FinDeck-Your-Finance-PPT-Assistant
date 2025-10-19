@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  prompt-analysis-service:
+    build: ./prompt_analysis_service
+    container_name: prompt-analysis-service
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./prompt_analysis_service:/app
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GCP_PROJECT=sunlit-runway-472202-p8
+      - GCP_REGION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+
+  content-generation-service:
+    build: ./content_generation_service
+    container_name: content-generation-service
+    ports:
+      - "8001:8080"
+    volumes:
+      - ./content_generation_service:/app
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GCP_PROJECT=sunlit-runway-472202-p8
+      - GCP_REGION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+
+  design-generation-service:
+    build: ./design_generation_service
+    container_name: design-generation-service
+    ports:
+      - "8002:8080"
+    volumes:
+      - ./design_generation_service:/app
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GCP_PROJECT=sunlit-runway-472202-p8
+      - GCP_REGION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+
+  ppt-assembly-service:
+    build: ./ppt_assembly_service
+    container_name: ppt-assembly-service
+    ports:
+      - "8003:8080"
+    volumes:
+      - ./ppt_assembly_service:/app
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GCP_PROJECT=sunlit-runway-472202-p8
+      - GCP_REGION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+
+  image-generation-service:
+    build: ./image_generation_service
+    container_name: image-generation-service
+    ports:
+      - "8004:8080"
+    volumes:
+      - ./image_generation_service:/app
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GCP_PROJECT=sunlit-runway-472202-p8
+      - GCP_REGION=us-central1 
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+
+  streamlit-ui:
+    build: ./streamlit_ui
+    container_name: streamlit-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./streamlit_ui:/app
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    environment:
+      - ANALYSIS_SERVICE_URL=http://prompt-analysis-service:8080/analyze
+      - CONTENT_SERVICE_URL=http://content-generation-service:8080/generate-content
+      - DESIGN_SERVICE_URL=http://design-generation-service:8080/generate-marp-design
+      - ASSEMBLY_SERVICE_URL=http://ppt-assembly-service:8080/assemble-presentation
+      - IMAGE_SERVICE_URL=http://image-generation-service:8080/generate-images

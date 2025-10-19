@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+google-cloud-aiplatform
+vertexai
+gunicorn

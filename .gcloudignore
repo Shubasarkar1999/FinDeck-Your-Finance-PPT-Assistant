@@ -1,0 +1,16 @@
+venv/
+.venv/
+env/
+ENV/
+pycache/
+*.pyc
+*.pyo
+*.pyd
+.env
+docker-compose.yml
+docker-compose.yaml
+.vscode/
+.idea/
+*.swp
+*.swo
+

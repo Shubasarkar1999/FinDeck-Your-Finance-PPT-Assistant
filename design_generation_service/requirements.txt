@@ -1,0 +1,8 @@
+# Third-party libraries
+fastapi
+uvicorn
+gunicorn
+httpx
+pydantic
+google-cloud-storage
+python-pptx

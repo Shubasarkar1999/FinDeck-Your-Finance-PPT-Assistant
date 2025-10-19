@@ -1,0 +1,88 @@
+# This file is structured to first build and push all images sequentially,
+# and only then begin the deployment process. This resolves the "Image not found" error.
+steps:
+# --- PHASE 1: BUILD AND PUSH ALL IMAGES ---
+
+# 1. Prompt Analysis Service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Prompt Analysis Service'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/prompt-analysis-service:latest', './prompt_analysis_service']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Prompt Analysis Service'
+  args: ['push', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/prompt-analysis-service:latest']
+
+# 2. Content Generation Service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Content Generation Service'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/content-generation-service:latest', './content_generation_service']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Content Generation Service'
+  args: ['push', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/content-generation-service:latest']
+
+# 3. Design Generation Service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Design Generation Service'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/design-generation-service:latest', './design_generation_service']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Design Generation Service'
+  args: ['push', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/design-generation-service:latest']
+
+# 4. PPT Assembly Service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build PPT Assembly Service'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/ppt-assembly-service:latest', './ppt_assembly_service']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push PPT Assembly Service'
+  args: ['push', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/ppt-assembly-service:latest']
+
+# 5. Image Generation Service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Image Generation Service'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/docker-repo/image-generation-service:latest', './image_generation_service']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Image Generation Service'
+  args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/docker-repo/image-generation-service:latest']
+
+# 6. Streamlit UI
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Streamlit UI'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/streamlit-ui:latest', './streamlit_ui']
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Streamlit UI'
+  args: ['push', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/streamlit-ui:latest']
+
+# --- PHASE 2: DEPLOY ALL SERVICES TO CLOUD RUN ---
+# This phase only starts after all images have been successfully pushed.
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy Prompt Analysis Service'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'prompt-analysis-service', '--image', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/prompt-analysis-service:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated']
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy Content Generation Service'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'content-generation-service', '--image', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/content-generation-service:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated']
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy Design Generation Service'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'design-generation-service', '--image', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/design-generation-service:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated']
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy PPT Assembly Service'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'ppt-assembly-service', '--image', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/ppt-assembly-service:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated', '--timeout=600']
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy Image Generation Service'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'image-generation-service', '--image', 'us-central1-docker.pkg.dev/${PROJECT_ID}/docker-repo/image-generation-service:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated']
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy Streamlit UI'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'streamlit-ui', '--image', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/docker-repo/streamlit-ui:latest', '--region', 'asia-south1', '--platform', 'managed', '--allow-unauthenticated']
+
+# NOTE: The 'images' section is no longer needed because we are pushing explicitly in the steps above.
+
