@@ -262,8 +262,9 @@ async def generate_full_presentation(request: GenerationRequest):
     finally:
         if 'temp_pptx_path' in locals() and os.path.exists(temp_pptx_path):
             os.remove(temp_pptx_path)
-            encoded_url = urllib.parse.quote(download_url, safe='')
-            preview_url = f"https://docs.google.com/gview?url={encoded_url}&embedded=true"
+    
+    encoded_url = urllib.parse.quote(download_url, safe='')
+    preview_url = f"https://docs.google.com/gview?url={encoded_url}&embedded=true"
 
     logger.info(f"✅ [{job_id}] Process complete. Returning URLs.")
     return GenerationResponse(download_url=download_url, preview_url=preview_url)

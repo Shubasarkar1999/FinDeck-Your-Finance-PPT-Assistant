@@ -54,7 +54,7 @@ async def analyze_prompt(request: UserPromptRequest):
     try:
         # --- ADDED LOGGING ---
         print("--- PROMPT ANALYSIS SERVICE: Sending request to Vertex AI... ---")
-        response = model.generate_content(extraction_prompt)
+        response = await model.generate_content_async(extraction_prompt)
         
         # --- ADDED LOGGING ---
         print(f"--- PROMPT ANALYSIS SERVICE: Raw response from Vertex AI: ---\n{response.text}\n--------------------")

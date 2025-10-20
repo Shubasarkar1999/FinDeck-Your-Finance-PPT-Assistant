@@ -42,6 +42,7 @@ def extract_json_from_string(text: str) -> str:
     return match.group(1) if match else ""
 
 # --- API Endpoint (Updated) ------------------------------------------------
+# --- API Endpoint (Updated) ------------------------------------------------
 @app.post("/generate-content", response_model=ContentResult)
 async def generate_content(request: AnalysisResultPayload):
     """
@@ -53,44 +54,59 @@ async def generate_content(request: AnalysisResultPayload):
 
     print(f"--- Generating content for topic: '{request.topic[:80]}...' in {request.language} ---")
 
-    # --- START OF CHANGE ---
-    # The prompt is updated to include the language parameter.
-   # This is the new prompt for your content-generation-service
+    # --- START OF CORRECTION ---
+    # The prompt is relaxed. It now asks for a MIX of general points and
+    # data-supported points, making citations optional and more natural.
     prompt = f"""
     You are an expert in creating professional presentations for the financial sector.
-    Your task is to generate the content for a presentation. For each slide, you must choose the best layout to represent the information.
+    Your task is to generate compelling content. Create a good mix of high-level, insightful points and points supported by specific data.
 
-    The user's request is: "{request.topic}"
-    The target audience is: "{request.target_audience}"
-    The desired number of slides is: {request.slide_count}
-    The presentation language MUST be: "{request.language}"
+    # --- CONTENT GUIDELINES ---
+    - **Factual & Current:** Where appropriate, support key arguments with verifiable facts, statistical figures, or recent news (from the last 12-18 months).
+    - **Natural Sourcing:** When you state a specific statistic or a critical data point, it is good practice to cite the source briefly in parentheses at the end of that bullet point. For example: (Source: Bloomberg, Oct 2025).
+    - **Balance is Key:** Do NOT add a citation to every bullet point. The majority of points should be general analysis and insights. Only use citations for specific, hard numbers or facts to add credibility where it counts the most.
 
-    AVAILABLE LAYOUTS:
+    # --- USER REQUEST ---
+    - The user's request is: "{request.topic}"
+    - The target audience is: "{request.target_audience}"
+    - The desired number of slides is: {request.slide_count}
+    - The presentation language MUST be: "{request.language}"
+
+    # --- AVAILABLE LAYOUTS & JSON STRUCTURE ---
     - "title_slide": For the main title. Use for the first slide. Data required: {{ "title": "...", "subtitle": "..." }}
     - "bullet_points": A standard slide with a title and several bullet points. Data required: {{ "title": "...", "points": ["...", "..."] }}
 
-    CRITICAL INSTRUCTIONS:
-    1. Your entire response MUST be a single, clean JSON object.
-    2. The root of the JSON object must be a "slides" array.
-    3. Each object in the "slides" array must have two keys: "layout" (the name of the chosen layout) and "data" (a JSON object containing the required information for that layout).
-    4. Each slide should have 4-5 bullet points and the word count should not exceed 25 words for each bullet point.
-    Example of a perfect response:
+    # --- CRITICAL INSTRUCTIONS ---
+    1.  Your entire response MUST be a single, clean JSON object.
+    2.  The root of the JSON object must be a "slides" array.
+    3.  Each object must have "layout" and "data" keys.
+    4.  Each slide should have 4-5 concise bullet points (under 25 words each).
+
+    # --- EXAMPLE OF A PERFECT RESPONSE (Shows a natural mix of points) ---
     {{
     "slides": [
         {{
-        "layout": "title_slide",
-        "data": {{ "title": "The Future of DeFi", "subtitle": "An overview" }}
+            "layout": "title_slide",
+            "data": {{ "title": "The Future of DeFi", "subtitle": "An Overview" }}
         }},
         {{
-        "layout": "numbered_bullets",
-        "data": {{ "title": "Key Challenges", "items": ["Security Risks", "Scalability Issues", "Regulatory Uncertainty"] }}
+            "layout": "bullet_points",
+            "data": {{
+                "title": "Key Market Trends",
+                "points": [
+                    "Increasing institutional adoption is driving market maturity and stability.",
+                    "The global DeFi market is projected to exceed $200 billion by 2028 (Source: Grand View Research).",
+                    "A major focus is now shifting towards improving user experience and accessibility for broader adoption.",
+                    "Regulatory frameworks are slowly beginning to take shape across major global economies."
+                ]
+            }}
         }}
     ]
     }}
 
     Ensure the JSON is perfectly formatted.
     """
-    # --- END OF CHANGE ---
+    # --- END OF CORRECTION ---
     try:
         response = await model.generate_content_async(prompt)
         json_string = extract_json_from_string(response.text)
